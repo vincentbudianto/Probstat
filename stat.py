@@ -3,7 +3,7 @@
 	Topik     : Tugas Besar 01 IF2122 - Probabilitas dan Statistika
 	Tanggal   : 09 April 2019
 	Deskripsi : Pemrosesan data statistika '''
-
+'''
 import pandas as pd
 import matplotlib as plt
 
@@ -62,4 +62,64 @@ input()
 print('Dataset 5')
 dd = pd.read_csv('athletes.csv')
 stat(dd)
+'''
 
+import warnings
+import numpy as np
+import pandas as pd
+import scipy.stats as st
+import matplotlib
+import matplotlib.pyplot as plt
+
+def best_fit_distribution(data, bins=200):
+    #Data bertipe array-like. x dan y akan menjadi array karena fungsi np.histogram
+    y,x = np.histogram(data, bins=bins, density=True)
+    x = (x + np.roll(x, -1))[:-1] / 2.0
+
+    DISTRIBUTIONS = [        
+        st.binom,st.multinomial,st.hypergeom,st.nbinom,st.geom,st.poisson, st.uniform,st.chi2,st.f,st.norm,st.lognorm,st.t,st.gamma,st.beta,st.alpha,st.expon,st.weibull_min,st.weibull_max
+    ]
+
+    # Best holders
+    best_distribution = st.norm
+    best_params = (0.0, 1.0)
+    best_sse = np.inf
+
+    # Estimate distribution parameters from data
+    for distribution in DISTRIBUTIONS:
+        # Try to fit the distribution
+        try:
+            # Ignore warnings from data that can't be fit
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+                
+                # fit dist to data
+                params = distribution.fit(data)
+                
+                # Separate parts of parameters
+                arg = params[:-2]
+                loc = params[-2]
+                scale = params[-1]
+
+                # Calculate fitted PDF and error with fit in distribution
+                pdf = distribution.pdf(x, loc=loc, scale=scale, *arg)
+                sse = np.sum(np.power(y - pdf, 2.0))
+
+                # identify if this distribution is better
+                if best_sse > sse > 0:
+                    best_distribution = distribution
+                    best_params = params
+                    best_sse = sse
+
+        except Exception:
+            pass
+
+    return (best_distribution.name, best_params)
+
+# Load data from statsmodels datasets
+data = pd.read_csv(r'fifa.csv',  header = None, skiprows = 1)
+data = data[1].values
+# Find best fit distribution
+best_fit_name, best_fit_params = best_fit_distribution(data, 200)
+best_dist = getattr(st, best_fit_name)
+print(best_fit_name)
