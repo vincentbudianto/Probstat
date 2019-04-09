@@ -117,8 +117,8 @@ def best_fit_distribution(data, bins=200):
     return (best_distribution.name, best_params)
 
 # Load data from statsmodels datasets
-data = pd.read_csv(r'fifa.csv',  header = None, skiprows = 1)
-data = data[1].values
+data = pd.read_csv(r'crypto.csv',  header = None, skiprows = 1)
+data = data[0].values
 # Find best fit distribution
 best_fit_name, best_fit_params = best_fit_distribution(data, 200)
 best_dist = getattr(st, best_fit_name)
